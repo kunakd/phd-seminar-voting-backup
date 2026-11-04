@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PhD Seminar Evaluation</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+* { box-sizing: border-box; }
+
+html, body {
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+body {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 30px 20px;
+  flex: 1;
+}
+
+header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+header img { height: 120px; margin-bottom: 10px; }
+
+header h1 {
+  margin: 0;
+  color: #333;
+  font-size: 28px;
+  text-align: center;
+}
+
+header h2.subtitle {
+  margin: 6px 0 0 0;
+  font-size: 18px;
+  font-weight: normal;
+  color: #666;
+  text-align: center;
+}
+
+.navbar {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.nav-btn {
+  padding: 10px 18px;
+  background: #4a4a4a;
+  color: white;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+
+.nav-btn:hover { background: #000; }
+
+label { display:block; margin-top:15px; font-weight:bold; font-size:18px; }
+label .hint { font-weight: normal; }
+
+input, select, button {
+  width:100%;
+  padding:10px;
+  margin-top:6px;
+  border-radius:6px;
+  border:1px solid #ccc;
+  font-size:18px;
+}
+
+#submitBtn {
+  background-color: #39ff14;
+  color: #000;
+  font-weight: bold;
+  font-size: 18px;
+  margin-top: 12px;
+  cursor: pointer;
+}
+
+#submitBtn:hover { background-color: #2cff0f; }
+
+.success { color: green; margin-top:20px; font-size:18px; text-align:center; }
+.error { color: red; margin-top:20px; font-size:18px; text-align:center; }
+
+.presentation-block { 
+  border: 1px solid #ccc; 
+  border-radius: 10px; 
+  padding: 20px; 
+  margin-top: 20px; 
+  background: #fafafa; 
+  box-shadow: 1px 1px 5px rgba(0,0,0,0.05); 
+  font-size:18px; 
+}
+
+.presentation-block h3 { 
+  margin-top: 0; 
+  color: #444; 
+  font-size:20px; 
+}
+
+/* vizuální styl pro zablokované hodnoty */
+select option.disabled-option {
+  color: #aaa;
+  background-color: #f0f0f0;
+}
+
+/* vizuální styl pro vybranou hodnotu */
+select option.selected-option {
+  font-weight: bold;
+  color: #fff;
+  background-color: #4a90e2;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <img src="logo.jpg" alt="Department Logo">
+  <h1>PhD Seminar Evaluation</h1>
+  <h2 class="subtitle">MSc Students Presentations</h2>
+
+</header>
+
+<form id="voteForm">
+  <label for="participantId">
+    <strong>Your Email</strong> 
+    <span class="hint">(…@natur.cuni.cz or …@uochb.cas.cz)</span>
+  </label>
+  <input type="email" id="participantId" required>
+
+  <div id="presentations"></div>
+
+  <button type="submit" id="submitBtn">Submit evaluation</button>
+</form>
+
+<div id="message"></div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyD8Aboi5TiNkGB54CGyAS_T2uKLkM3evjI",
+  authDomain: "phd-seminar-msc.firebaseapp.com",
+  projectId: "phd-seminar-msc",
+  storageBucket: "phd-seminar-msc.firebasestorage.app",
+  messagingSenderId: "985313934310",
+  appId: "1:985313934310:web:d1481ec52414478dde7427",
+  measurementId: "G-N2E3583HSH"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const students = [
+  { name: "Aleksandr Vasilenko", title: "Synthesis of chiral cyclopentadienes with [2.2]paracyclophane skeleton" },
+  { name: "Martin Vacek", title: "Using tandem carbopalladation/Sonogashira cross-coupling products in the synthesis of polycyclic compounds" },
+  { name: "Daniel Čermák", title: "Application of carbene catalysis for construction of chiral cyclic molecules" },
+  { name: "Palina Kudrejka", title: "Preparation of enantiomerically enriched sulfoxides using desymmetrization" }
+];
+
+const presDiv = document.getElementById("presentations");
+const form = document.getElementById("voteForm");
+const participantInput = document.getElementById("participantId");
+
+function renderStudents(){
+  students.forEach((s,i)=>{
+    const block = document.createElement('div');
+    block.className = 'presentation-block';
+    block.innerHTML = `
+      <h3>${s.name}</h3>
+      <p><strong>${s.title}</strong></p>
+      <label>Proposed rank (1 = best, ${students.length} = worst)</label>
+      <select id="rank${i}" required>
+        <option value="">--Select--</option>
+        ${Array.from({length: students.length}, (_,n)=>`<option value="${n+1}">${n+1}</option>`).join('')}
+      </select>
+    `;
+    presDiv.appendChild(block);
+  });
+
+  const selects = Array.from(document.querySelectorAll('select'));
+
+  function updateOptions(){
+    const chosenValues = selects
+      .filter(s => s.value)
+      .map(s => s.value);
+
+    selects.forEach(s => {
+      Array.from(s.options).forEach(opt => {
+        opt.classList.remove('disabled-option', 'selected-option');
+
+        if(opt.value === "") return;
+
+        if(opt.value === s.value){
+          opt.classList.add('selected-option'); 
+        } else if(chosenValues.includes(opt.value)){
+          opt.disabled = true;
+          opt.classList.add('disabled-option'); 
+        } else {
+          opt.disabled = false;
+        }
+      });
+    });
+  }
+
+  selects.forEach(s => s.addEventListener('change', updateOptions));
+}
+
+renderStudents();
+
+function showMessage(text, type){
+  const el = document.getElementById('message');
+  el.textContent = text || '';
+  el.className = type === 'error' ? 'error' : (type === 'success' ? 'success' : '');
+}
+
+function safeIdForDoc(str){
+  return String(str).trim().replace(/[.#$/\\[\\]]/g, '_');
+}
+
+form.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  showMessage('');
+
+  const participant = participantInput.value.trim();
+  if(!participant){
+    showMessage("Please enter your email.", "error");
+    return;
+  }
+
+  const ranks = [];
+  for(let i=0;i<students.length;i++){
+    const value = document.getElementById(`rank${i}`).value;
+    if(!value){
+      showMessage("Please assign a rank to each student.", "error");
+      return;
+    }
+    ranks.push(parseInt(value));
+  }
+
+  const uniqueRanks = new Set(ranks);
+  if(uniqueRanks.size !== students.length){
+    showMessage("Each rank can be used only once.", "error");
+    return;
+  }
+
+  const voteData = students.map((s,i)=>({
+    name: s.name,
+    title: s.title,
+    rank: ranks[i]
+  }));
+
+  try{
+    const safeId = safeIdForDoc(participant);
+    const docRef = db.collection("msc_votes").doc(safeId);
+    const existing = await docRef.get();
+
+    if(existing.exists){
+      showMessage("You have already submitted your evaluation.", "error");
+      return;
+    }
+
+    await docRef.set({
+      participant,
+      votes: voteData,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    showMessage("Thank you for your evaluation!", "success");
+    form.reset();
+
+    const selects = Array.from(document.querySelectorAll('select'));
+    selects.forEach(s => Array.from(s.options).forEach(opt => {
+      opt.disabled = false;
+      opt.classList.remove('disabled-option', 'selected-option');
+    }));
+  }catch(err){
+    console.error(err);
+    showMessage("Error submitting evaluation.", "error");
+  }
+});
+</script>
+
+<footer style="text-align:center; padding:20px 15px; font-size:16px; background:#fff; border-top:1px solid #ccc;">
+  <img src="logo.jpg" alt="Faculty Logo" style="height:60px; display:block; margin:0 auto 10px auto;">
+  <p>© 2025 Department of Organic Chemistry, Faculty of Science, Charles University</p>
+  <p>Hlavova 2030/8, Prague 2, 128 00</p>
+  <p>Seminar Contacts: jiri.misek@natur.cuni.cz; dominik.kunak@natur.cuni.cz</p>
+  <p>
+    <a href="https://orgchem.natur.cuni.cz/" target="_blank" style="color:#000; text-decoration:none;">
+      https://orgchem.natur.cuni.cz
+    </a>
+  </p>
+</footer>
+
+</body>
+</html>
+
+
+
+

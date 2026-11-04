@@ -1,0 +1,123 @@
+{
+  "academicYear": "2025/2026",
+  "seminars": {
+    "Seminar 1": {
+      "numberOfVotes": 49,
+      "presentations": [
+        {
+          "name": "Samanta Rožánková",
+          "averageScore": 8.428571428571429
+        },
+        {
+          "name": "Büşra Buse Tütüncü",
+          "averageScore": 8.306122448979592
+        },
+        {
+          "name": "Yu-Wei Tu",
+          "averageScore": 8.183673469387756
+        },
+        {
+          "name": "Marko Boskovic",
+          "averageScore": 7.142857142857143
+        }
+      ]
+    },
+    "Seminar 2": {
+      "numberOfVotes": 59,
+      "presentations": [
+        {
+          "name": "Bart Kieftenbelt",
+          "averageScore": 9.322033898305085
+        },
+        {
+          "name": "Ema Bažíková",
+          "averageScore": 8.610169491525424
+        },
+        {
+          "name": "Pratibha Choudhari",
+          "averageScore": 6.0508474576271185
+        }
+      ]
+    },
+    "Seminar 3": {
+      "numberOfVotes": 40,
+      "presentations": [
+        {
+          "name": "Ondřej Daněk",
+          "averageScore": 8.35
+        },
+        {
+          "name": "Pallavi Halkarni",
+          "averageScore": 7.85
+        },
+        {
+          "name": "Pipatpon Raksapon",
+          "averageScore": 7.65
+        },
+        {
+          "name": "Anna-Marie Dušková",
+          "averageScore": 7.425
+        }
+      ]
+    },
+    "Seminar 4": {
+      "numberOfVotes": 48,
+      "presentations": [
+        {
+          "name": "Alicia León Rodríguez",
+          "averageScore": 8.291666666666666
+        },
+        {
+          "name": "Andrea Vopálenská",
+          "averageScore": 8.270833333333334
+        },
+        {
+          "name": "Filip Trajhan",
+          "averageScore": 7.729166666666667
+        }
+      ]
+    },
+    "Seminar 5": {
+      "numberOfVotes": 38,
+      "presentations": [
+        {
+          "name": "Ondřej Hladík",
+          "averageScore": 8.763157894736842
+        },
+        {
+          "name": "Nidhi Sinha",
+          "averageScore": 8.421052631578947
+        },
+        {
+          "name": "Lucie Černá",
+          "averageScore": 8.31578947368421
+        },
+        {
+          "name": "Shubham Bhatt",
+          "averageScore": 8.052631578947368
+        }
+      ]
+    },
+    "Seminar 6": {
+      "numberOfVotes": 41,
+      "presentations": [
+        {
+          "name": "Dominik Kunák",
+          "averageScore": 8.24390243902439
+        },
+        {
+          "name": "Jyotpreet Kaur",
+          "averageScore": 8.121951219512194
+        },
+        {
+          "name": "Sandip Baban Shinde",
+          "averageScore": 7.951219512195122
+        },
+        {
+          "name": "Jakub Krištof",
+          "averageScore": 7.195121951219512
+        }
+      ]
+    }
+  }
+}

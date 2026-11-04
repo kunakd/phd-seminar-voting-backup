@@ -24,7 +24,6 @@ button { font-size:16px; margin-top:10px; cursor: pointer; }
 .checkbox-row input[type="checkbox"] { width: auto; cursor:pointer; }
 textarea:disabled { background-color: #eee; color: #666; }
 </style>
-<link rel="stylesheet" href="department-theme.css">
 </head>
 <body>
 <header>
@@ -84,19 +83,32 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 </script>
 <script src="voting-2026-2027.js"></script>
-
+<footer style="
+  background-color: #ffffff;
+  text-align: center;
+  padding: 25px 15px;
+  font-size: 14px;
+  color: #000;
+  border-top: 1px solid #ccc;
+  margin-top: 60px;
+">
+  <img src="logo.jpg" alt="PřF UK Logo" style="height: 55px; margin-bottom: 10px;">
+  <p style="margin: 6px 0;">
+    © 2025 Department of Organic Chemistry, Faculty of Science at Charles University in Prague
+  </p>
+  <p style="margin: 6px 0;">
+    Hlavova 2030/8, Praha 2, 128 00 &nbsp;|&nbsp;
+    Seminar Contacts: jiri.misek@natur.cuni.cz; kunakd@natur.cuni.cz
+  </p>
+  <p style="margin: 6px 0;">
+    <a href="https://orgchem.natur.cuni.cz/" target="_blank" style="color: #000; text-decoration: none;">
+      https://orgchem.natur.cuni.cz
+    </a>
+  </p>
+</footer>
 
   
 <script src="auth-2026-2027.js"></script>
-<footer class="site-footer" aria-label="Department information and contacts">
-  <div class="site-footer__brand"><img src="logo.jpg" alt="Faculty of Science, Charles University – Department of Organic Chemistry"><p>Department of Organic Chemistry · Charles University</p></div>
-  <div class="site-footer__grid">
-    <section class="site-footer__item" aria-label="Department address"><h2>Department address</h2><p>Hlavova 2030/8<br>128 00 Praha 2, Czech Republic</p><p><a href="https://orgchem.natur.cuni.cz/" target="_blank" rel="noopener noreferrer">orgchem.natur.cuni.cz</a></p></section>
-    <section class="site-footer__item" aria-label="Seminar contacts"><h2>Seminar organization</h2><p><span class="site-footer__person">Jiří Míšek</span> · Head of PhD seminars<br><a href="mailto:jiri.misek@natur.cuni.cz">jiri.misek@natur.cuni.cz</a></p><p><span class="site-footer__person">Radek Staník</span> · Seminar coordinator<br><a href="mailto:radek.stanik@natur.cuni.cz">radek.stanik@natur.cuni.cz</a></p></section>
-    <section class="site-footer__item" aria-label="Voting support"><h2>Voting system · technical support</h2><p><span class="site-footer__person">Dominik Kunák</span><br><a href="mailto:kunakd@natur.cuni.cz">kunakd@natur.cuni.cz</a></p><p>Registration, verification, sign-in and voting issues.</p></section>
-    <section class="site-footer__item" aria-label="Quick links"><h2>Quick links</h2><p><a href="index.html">Voting</a> · <a href="results.html">Evaluation results</a> · <a href="feedback.html">Presenter feedback</a></p></section>
-  </div><p class="site-footer__copyright">© 2026 Department of Organic Chemistry, Faculty of Science, Charles University</p>
-</footer>
 </body>
 </html>
 

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PhD Seminar Results</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+<style>
+html, body {
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: Arial;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+body {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 30px 20px;
+  flex: 1;
+}
+
+header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+header img { height: 120px; margin-bottom: 10px; }
+
+header h1 {
+  margin: 0;
+  color: #333;
+  font-size: 28px;
+  text-align: center;
+}
+
+.navbar {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.nav-btn {
+  padding: 10px 18px;
+  background: #4a4a4a;
+  color: white;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 15px;
+}
+
+.nav-btn:hover { background: #000; }
+
+#seminarSelectContainer {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.seminar {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 22px 28px;
+  max-width: 420px;
+  margin: 0 auto 40px auto;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.seminar h2 { margin-top: 0; }
+
+.year {
+  font-style: italic;
+  color: #555;
+  margin-bottom: 12px;
+}
+
+.winner {
+  margin-top: 14px;
+  font-weight: bold;
+  color: #2e7d32;
+}
+
+.votes {
+  font-weight: bold;
+  color: #f57c00;
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+footer {
+  text-align: center;
+  padding: 25px 15px;
+  font-size: 14px;
+  border-top: 1px solid #ccc;
+  margin-top: auto;
+  width: 100%;
+}
+
+/* PODIUM */
+.podium-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 50px;
+}
+
+.podium-title {
+  font-size: 26px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.podium {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 30px;
+}
+
+.block {
+  width: 140px;
+  padding: 10px;
+  font-weight: bold;
+  text-align: center;
+  border-radius: 8px;
+}
+
+.first { background: gold; height: 160px; }
+.second { background: silver; height: 120px; }
+.third { background: #cd7f32; height: 100px; }
+</style>
+</head>
+
+<body>
+
+<header>
+  <img src="logo.jpg" alt="Department Logo">
+  <h1>PhD Seminar Evaluation Results</h1>
+
+  <div class="navbar">
+    <a href="index.html" class="nav-btn">Evaluation</a>
+    <a href="feedback.html" class="nav-btn">Feedback</a>
+  </div>
+</header>
+
+<div id="seminarSelectContainer">
+  <strong>Select seminar:</strong><br><br>
+  <select id="seminarSelect">
+    <option value="">-- choose seminar --</option>
+    <option value="Seminar 1">Seminar 1 (4th year) – 14 Nov 2025</option>
+    <option value="Seminar 2">Seminar 2 (4th year) – 12 Dec 2025</option>
+    <option value="Seminar 3">Seminar 3 (2nd year) – 9 Jan 2026</option>
+    <option value="Seminar 4">Seminar 4 (2nd year) – 13 Feb 2026</option>
+    <option value="Seminar 5">Seminar 5 (2nd year) – 10 Apr 2026</option>
+    <option value="Seminar 6">Seminar 6 (2nd year) – 15 May 2026</option>
+    <option value="Grand">Overall winners</option>
+  </select>
+</div>
+
+<div id="results"></div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyA3oSDoF5LC6pweqVinV2ykpJopQwFWulM",
+  authDomain: "phd-seminar-voting.firebaseapp.com",
+  projectId: "phd-seminar-voting",
+  storageBucket: "phd-seminar-voting.firebasestorage.app",
+  messagingSenderId: "1042633812969",
+  appId: "1:1042633812969:web:7fa70745a53338ec5ab978"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const presentationsBySeminar = {
+  "Seminar 1": ["Marko Boskovic", "Büşra Buse Tütüncü", "Samanta Rožánková", "Yu-Wei Tu"],
+  "Seminar 2": ["Bart Kieftenbelt", "Ema Bažíková", "Pratibha Choudhari"],
+  "Seminar 3": ["Anna-Marie Dušková", "Pallavi Halkarni", "Pipatpon Raksapon", "Ondřej Daněk"],
+  "Seminar 4": ["Filip Trajhan", "Alicia León Rodríguez", "Jakub Krištof", "Andrea Vopálenská"],
+  "Seminar 5": ["Ondřej Hladík", "Lucie Černá", "Shubham Bhatt", "Nidhi Sinha"],
+  "Seminar 6": ["Najam Ul Sahar", "Jyotpreet Kaur", "Sandip Baban Shinde", "Dominik Kunák"]
+};
+
+const seminarYear = {
+  "Seminar 1": "4th year students",
+  "Seminar 2": "4th year students",
+  "Seminar 3": "2nd year students",
+  "Seminar 4": "2nd year students",
+  "Seminar 5": "2nd year students",
+  "Seminar 6": "2nd year students"
+};
+
+const seminarSelect = document.getElementById("seminarSelect");
+const resultsDiv = document.getElementById("results");
+
+seminarSelect.addEventListener("change", async () => {
+  const selected = seminarSelect.value;
+  resultsDiv.innerHTML = "";
+  if (!selected) return;
+
+  if (selected === "Grand") {
+    showGrandWinners();
+    return;
+  }
+
+  const snapshot = await db.collection("votes").where("seminar", "==", selected).get();
+  const pres = presentationsBySeminar[selected];
+
+  const votesInfo = document.createElement("div");
+  votesInfo.className = "votes";
+  votesInfo.textContent = `${snapshot.size} participants of the seminar submitted their votes`;
+  resultsDiv.appendChild(votesInfo);
+
+  let totals = Array(pres.length).fill(0);
+  snapshot.forEach(doc => {
+    doc.data().presentations.forEach((p,i)=> totals[i] += p.score);
+  });
+
+  const avg = totals.map(t => (t / snapshot.size).toFixed(2));
+  const ranked = avg.map((s,i)=>({s:parseFloat(s),i})).sort((a,b)=>b.s-a.s);
+
+  let html = `<div class="seminar">
+    <h2>${selected}</h2>
+    <div class="year">${seminarYear[selected]}</div>`;
+
+  ranked.forEach((r,pos)=>{
+    html += `<p>${pos+1}. ${pres[r.i]} – ${r.s} points</p>`;
+  });
+
+  html += `<div class="winner">Winner: ${pres[ranked[0].i]}</div></div>`;
+  resultsDiv.innerHTML += html;
+
+  confetti({ particleCount: 120, spread: 120 });
+});
+
+async function showGrandWinners() {
+  resultsDiv.innerHTML = "";
+
+  const groups = {
+    "4th year students": ["Seminar 1", "Seminar 2"],
+    "2nd year students": ["Seminar 3", "Seminar 4", "Seminar 5", "Seminar 6"]
+  };
+
+  for (const group in groups) {
+    let all = [];
+
+    for (const sem of groups[group]) {
+      const names = presentationsBySeminar[sem];
+      const snap = await db.collection("votes").where("seminar","==",sem).get();
+      if (snap.empty) continue;
+
+      let totals = Array(names.length).fill(0);
+      snap.forEach(doc=>{
+        doc.data().presentations.forEach((p,i)=>totals[i]+=p.score);
+      });
+
+      totals.map(t=>t/snap.size).forEach((score,i)=>{
+        all.push({name:names[i], score});
+      });
+    }
+
+    const top3 = all.sort((a,b)=>b.score-a.score).slice(0,3);
+
+    resultsDiv.innerHTML += `
+      <div class="podium-wrapper">
+        <div class="podium-title">${group} – Overall Top 3</div>
+        <div class="podium">
+          <div class="block second">2nd<br>${top3[1].name}<br>${top3[1].score.toFixed(2)}</div>
+          <div class="block first">1st<br>${top3[0].name}<br>${top3[0].score.toFixed(2)}</div>
+          <div class="block third">3rd<br>${top3[2].name}<br>${top3[2].score.toFixed(2)}</div>
+        </div>
+      </div>`;
+  }
+
+  confetti({ particleCount: 200, spread: 150 });
+}
+</script>
+
+<footer>
+  <img src="logo.jpg" alt="Faculty Logo" style="height: 55px; margin-bottom: 10px;">
+  <p>© 2025 Department of Organic Chemistry, Faculty of Science, Charles University</p>
+  <p>Hlavova 2030/8, Prague 2, 128 00 | jiri.misek@natur.cuni.cz; dominik.kunak@natur.cuni.cz</p>
+  <a href="https://orgchem.natur.cuni.cz/" target="_blank">https://orgchem.natur.cuni.cz</a>
+</footer>
+
+</body>
+</html>
