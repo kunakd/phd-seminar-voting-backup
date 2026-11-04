@@ -28,3 +28,60 @@
   .signed-in-bar #signOutBtn { width:auto!important; min-width:86px; max-width:105px; padding:8px 9px!important; font-size:.85rem!important; }
   .presentation-block { margin-top:20px!important; }
 }
+
+
+/* 2026-11-04 | Academic visual refinement | CSS only.
+   No changes to authentication, voting, data storage, or Firebase rules. */
+:root {
+  --green: #a8cf29;
+  --green-dark: #4e7116;
+  --ink: #27302b;
+  --muted: #647068;
+  --line: #dce4d5;
+  --bg: #f5f7f2;
+  --shadow: 0 8px 26px rgba(28,48,20,.055);
+}
+/* Clearer typography and more compact first screen. */
+body > header { margin-bottom: 18px!important; }
+body > header img { margin-bottom: 12px!important; }
+body > header h1 { font-weight: 750!important; letter-spacing: -.025em!important; }
+#authSection, form#voteForm, body > section { box-shadow: var(--shadow)!important; }
+/* Presenter cards: keep native selects for reliable mobile accessibility. */
+.presentation-block {
+  padding: 18px 20px!important;
+  margin-top: 18px!important;
+  border-left-width: 4px!important;
+  background: #fdfefb!important;
+}
+.presentation-block h3 { margin-bottom: 9px!important; line-height: 1.35!important; }
+.presentation-block label { margin-top: 12px!important; }
+.presentation-block textarea {
+  min-height: 84px!important;
+  line-height: 1.5!important;
+}
+input:not([type=checkbox]), select, textarea { transition: border-color .15s, box-shadow .15s; }
+input:not([type=checkbox]):focus, select:focus, textarea:focus {
+  border-color: #83a82b!important;
+  box-shadow: 0 0 0 3px rgba(168,207,41,.13)!important;
+}
+/* Text feedback remains visible and readable without relying on color alone. */
+#message, #authStatus, #votingWindowStatus { line-height: 1.5!important; }
+#message:not(:empty) { padding: 12px 14px; border-radius: 10px; }
+#message.success { background: #edf5e4; border: 1px solid #d3e4c4; }
+#message.error { background: #fff1f0; border: 1px solid #f0cbc8; }
+/* Footer: preserve all people, addresses, and links; improve density. */
+.site-footer { margin-top: 36px!important; }
+.site-footer__grid { gap: 18px 28px!important; margin: 20px 0!important; padding: 20px 0!important; }
+.site-footer__item h2 { font-size: 15px!important; margin-bottom: 7px!important; }
+.site-footer__item p { line-height: 1.5!important; }
+.site-footer__brand img { margin-bottom: 12px!important; }
+@media (max-width: 620px) {
+  body { padding: 12px 12px 24px!important; }
+  body > header { margin-bottom: 12px!important; }
+  body > header img { margin-bottom: 9px!important; }
+  form#voteForm { padding: 16px!important; }
+  .presentation-block { padding: 16px!important; margin-top: 16px!important; }
+  .presentation-block textarea { min-height: 76px!important; }
+  .site-footer { padding: 20px 18px!important; margin-top: 30px!important; }
+  .site-footer__grid { gap: 14px!important; margin: 16px 0!important; padding: 16px 0!important; }
+}
