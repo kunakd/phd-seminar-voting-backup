@@ -13,3 +13,18 @@
 .signed-in-bar #signOutBtn { width:auto!important; flex:0 0 auto; margin:0!important; padding:9px 18px!important; min-height:40px!important; }
 #authSection.auth-section--signed-in label[for="authEmail"],#authSection.auth-section--signed-in label[for="authPassword"],#authSection.auth-section--signed-in #authEmail,#authSection.auth-section--signed-in #authPassword { display:none!important; }
 @media(max-width:520px) { .signed-in-bar { flex-direction:column; align-items:stretch; padding:14px 16px; } .signed-in-bar #signOutBtn { width:100%!important; } }
+
+/* Final visual polish: compact account bar and clearer presenter cards. */
+.signed-in-bar { flex-direction:row!important; align-items:center!important; justify-content:space-between!important; gap:12px!important; }
+.signed-in-bar__identity { flex:1 1 auto; }
+.signed-in-bar #signOutBtn { display:inline-flex!important; align-items:center; justify-content:center; width:auto!important; min-width:100px; max-width:140px; white-space:nowrap; margin:0!important; padding:8px 14px!important; font-size:.9rem!important; }
+.presentation-block { margin-top:24px!important; }
+.presentation-block h3 { font-size:1.1rem!important; font-weight:700!important; margin-bottom:14px!important; }
+.presentation-block label { font-size:1rem!important; }
+@media (max-width:520px) {
+  .signed-in-bar { flex-direction:row!important; align-items:center!important; gap:10px!important; padding:13px 12px!important; }
+  .signed-in-bar__identity { gap:8px; }
+  #signedInEmail { font-size:.86rem; }
+  .signed-in-bar #signOutBtn { width:auto!important; min-width:86px; max-width:105px; padding:8px 9px!important; font-size:.85rem!important; }
+  .presentation-block { margin-top:20px!important; }
+}

@@ -1,0 +1,1 @@
+Nahrajte do testovaciho repozitare phd-seminar-voting-backup soubory index.html a department-theme.css do korene a potvrdte prepsani. Ostatni soubory nemenit. Zmeny: kompaktni prihlasovaci lista a jemne zvyrazneni karet prezentujicich. Logika hlasovani a Firebase zustavaji beze zmeny. Pozor: testovaci web muze pouzivat produkcni Firebase; neodesilejte testovaci hlasy.
