@@ -1,0 +1,1 @@
+TEST REPOSITORY ONLY. Replace index.html and department-theme.css at repository root. Do not change auth-2026-2027.js or voting-2026-2027.js. Signed-in verified users see an account bar and no login card. Unverified users retain verification controls. Test sign-out and verification before production deployment.

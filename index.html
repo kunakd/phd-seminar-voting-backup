@@ -35,6 +35,10 @@ footer a { color: #000; text-decoration: none; overflow-wrap: anywhere; }
   <img src="logo.jpg" alt="Department Logo">
   <h1>PhD Seminar Evaluation</h1>
 </header>
+<div id="signedInBar" class="signed-in-bar" hidden aria-label="Signed-in account">
+  <div class="signed-in-bar__identity"><span class="signed-in-bar__dot" aria-hidden="true"></span><span><span class="signed-in-bar__label">Signed in as</span><strong id="signedInEmail"></strong></span></div>
+  <button type="button" id="signOutBtn" style="display:none;">Sign out</button>
+</div>
 <section id="authSection">
   <h2>Sign in to vote</h2>
   <p>Please use your verified institutional email address (@natur.cuni.cz or @uochb.cas.cz).</p>
@@ -48,7 +52,6 @@ footer a { color: #000; text-decoration: none; overflow-wrap: anywhere; }
     <button type="button" id="resetPasswordBtn">Forgot password?</button>
     <button type="button" id="verifyEmailBtn" style="display:none;">Resend verification email</button>
     <button type="button" id="checkVerificationBtn" style="display:none;">Check verification</button>
-    <button type="button" id="signOutBtn" style="display:none;">Sign out</button>
   </div>
   <p id="authStatus" role="status" aria-live="polite"></p>
 </section>
@@ -82,6 +85,23 @@ firebase.initializeApp(firebaseConfig);
 </script>
 <script src="voting-2026-2027.js"></script>
 <script src="auth-2026-2027.js"></script>
+<script>
+/* Visual account display only; authentication and voting logic remain unchanged. */
+(function () {
+  const bar = document.getElementById('signedInBar');
+  const section = document.getElementById('authSection');
+  const email = document.getElementById('signedInEmail');
+  firebase.auth().onAuthStateChanged(function (user) {
+    const signedIn = Boolean(user);
+    const verified = signedIn && user.emailVerified && /^[^@\s]+@(natur\.cuni\.cz|uochb\.cas\.cz)$/i.test(user.email || '');
+    bar.hidden = !signedIn;
+    section.hidden = Boolean(verified);
+    section.classList.toggle('auth-section--signed-in', signedIn);
+    email.textContent = signedIn ? (user.email || 'Account') : '';
+  });
+})();
+</script>
+
 
 <footer class="site-footer" aria-label="Department information and contacts">
   <div class="site-footer__brand"><img src="logo.jpg" alt="Faculty of Science, Charles University – Department of Organic Chemistry"><p>Department of Organic Chemistry · Charles University</p></div>
