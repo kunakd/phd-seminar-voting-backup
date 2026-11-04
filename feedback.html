@@ -1,0 +1,450 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+
+  <title>Presenter Feedback 2026/2027</title>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 750px;
+      margin: 30px auto;
+      padding: 20px;
+      color: #333;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    header img {
+      max-width: 100%;
+      height: auto;
+      max-height: 110px;
+    }
+
+    section {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 18px 0;
+    }
+
+    label {
+      display: block;
+      margin-top: 12px;
+      font-weight: bold;
+    }
+
+    input, button {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    .comment {
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .account-links {
+      margin-top: 14px;
+      line-height: 1.8;
+    }
+
+    .error {
+      color: #b00020;
+    }
+
+    nav {
+      text-align: center;
+      margin-top: 24px;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+  </style>
+<link rel="stylesheet" href="department-theme.css">
+</head>
+
+<body>
+
+<header>
+  <img src="logo.jpg" alt="Department logo">
+  <h1>Presenter Feedback</h1>
+  <p>Academic Year 2026/2027</p>
+</header>
+
+<section>
+  <p>
+    Use the same institutional account for seminar voting
+    and presenter feedback.
+  </p>
+
+  <p>
+    Only feedback assigned to your verified presenter
+    account can be displayed. Comments are shown without
+    voter identities.
+  </p>
+
+  <div id="signinControls" hidden>
+    <label for="email">Institutional email</label>
+    <input
+      id="email"
+      type="email"
+      autocomplete="email"
+      placeholder="name@natur.cuni.cz"
+    >
+
+    <label for="password">Password</label>
+    <input
+      id="password"
+      type="password"
+      autocomplete="current-password"
+    >
+
+    <button type="button" id="login">
+      Sign in
+    </button>
+
+    <div class="account-links">
+      <a href="index.html">Create an account</a>
+      ·
+      <a href="index.html">Forgot password?</a>
+    </div>
+  </div>
+
+  <div id="signedInControls" hidden>
+    <p id="signedInEmail"></p>
+
+    <button type="button" id="refresh">
+      Refresh my feedback
+    </button>
+
+    <button type="button" id="logout">
+      Sign out
+    </button>
+  </div>
+
+  <p id="status" role="status" aria-live="polite">
+    Checking your account...
+  </p>
+</section>
+
+<section id="panel" hidden>
+  <h2 id="presenter"></h2>
+  <div id="comments"></div>
+</section>
+
+<nav>
+  <a href="index.html">Voting</a>
+  ·
+  <a href="results.html">Results</a>
+</nav>
+
+<script>
+"use strict";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA3oSDoF5LC6pweqVinV2ykpJopQwFWulM",
+  authDomain: "phd-seminar-voting.firebaseapp.com",
+  projectId: "phd-seminar-voting",
+  storageBucket: "phd-seminar-voting.firebasestorage.app",
+  messagingSenderId: "1042633812969",
+  appId: "1:1042633812969:web:7fa70745a53338ec5ab978"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const $ = id => document.getElementById(id);
+
+const allowedDomains = [
+  "natur.cuni.cz",
+  "uochb.cas.cz"
+];
+
+let loadId = 0;
+
+function validEmail(email) {
+  const parts = String(email || "")
+    .trim()
+    .toLowerCase()
+    .split("@");
+
+  return (
+    parts.length === 2 &&
+    parts[0].length > 0 &&
+    allowedDomains.includes(parts[1])
+  );
+}
+
+function setStatus(message, isError = false) {
+  $("status").textContent = message;
+  $("status").className = isError ? "error" : "";
+}
+
+function clearFeedback() {
+  $("panel").hidden = true;
+  $("presenter").textContent = "";
+  $("comments").replaceChildren();
+}
+
+function updateAccountUI(user) {
+  $("signinControls").hidden = Boolean(user);
+  $("signedInControls").hidden = !user;
+
+  $("signedInEmail").textContent = user
+    ? "Signed in as " + user.email
+    : "";
+}
+
+async function loadFeedback(user) {
+  const requestId = ++loadId;
+
+  clearFeedback();
+
+  if (!user) {
+    setStatus("Sign in to see your feedback.");
+    return;
+  }
+
+  if (!validEmail(user.email)) {
+    setStatus(
+      "This account does not use an approved institutional email.",
+      true
+    );
+    return;
+  }
+
+  if (!user.emailVerified) {
+    setStatus(
+      "Please verify your institutional email address " +
+      "before accessing feedback."
+    );
+    return;
+  }
+
+  setStatus("Loading your private feedback...");
+
+  try {
+    const snapshot = await db
+      .collection("presenter_feedback_2026_2027")
+      .doc(user.uid)
+      .get();
+
+    if (
+      requestId !== loadId ||
+      auth.currentUser?.uid !== user.uid
+    ) {
+      return;
+    }
+
+    if (!snapshot.exists) {
+      setStatus(
+        "No feedback has been published for this account yet."
+      );
+      return;
+    }
+
+    const data = snapshot.data();
+
+    if (
+      !data ||
+      typeof data.presenter !== "string" ||
+      !Array.isArray(data.comments)
+    ) {
+      throw new Error("Invalid feedback format.");
+    }
+
+    $("presenter").textContent =
+      "Anonymous feedback for " + data.presenter;
+
+    if (data.comments.length === 0) {
+      const paragraph = document.createElement("p");
+
+      paragraph.textContent =
+        "No comments were submitted.";
+
+      $("comments").appendChild(paragraph);
+    }
+
+    for (const comment of data.comments) {
+      if (typeof comment !== "string") {
+        continue;
+      }
+
+      const paragraph = document.createElement("p");
+
+      paragraph.className = "comment";
+      paragraph.textContent = comment;
+
+      $("comments").appendChild(paragraph);
+    }
+
+    $("panel").hidden = false;
+    setStatus("Your feedback is ready.");
+
+  } catch (error) {
+    if (requestId !== loadId) {
+      return;
+    }
+
+    console.error("Feedback loading failed:", error);
+
+    setStatus(
+      "Unable to load feedback. Please try again later.",
+      true
+    );
+  }
+}
+
+$("login").addEventListener("click", async () => {
+  const email = $("email").value.trim().toLowerCase();
+  const password = $("password").value;
+
+  if (!validEmail(email)) {
+    setStatus(
+      "Please use an approved institutional email.",
+      true
+    );
+    return;
+  }
+
+  if (!password) {
+    setStatus("Please enter your password.", true);
+    return;
+  }
+
+  $("login").disabled = true;
+  setStatus("Signing in...");
+
+  try {
+    const result = await auth.signInWithEmailAndPassword(
+      email,
+      password
+    );
+
+    $("password").value = "";
+
+    await result.user.reload();
+
+    if (auth.currentUser) {
+      updateAccountUI(auth.currentUser);
+      await loadFeedback(auth.currentUser);
+    }
+
+  } catch (error) {
+    console.error("Sign-in failed:", error.code);
+
+    setStatus(
+      "Sign-in failed. Please check your credentials.",
+      true
+    );
+
+  } finally {
+    $("login").disabled = false;
+  }
+});
+
+$("logout").addEventListener("click", async () => {
+  try {
+    await auth.signOut();
+  } catch (error) {
+    setStatus("Unable to sign out.", true);
+  }
+});
+
+$("refresh").addEventListener("click", async () => {
+  const user = auth.currentUser;
+
+  if (!user) {
+    setStatus("Please sign in first.");
+    return;
+  }
+
+  $("refresh").disabled = true;
+
+  try {
+    await user.reload();
+
+    if (auth.currentUser) {
+      await loadFeedback(auth.currentUser);
+    }
+  } catch (error) {
+    setStatus(
+      "Unable to refresh your account.",
+      true
+    );
+  } finally {
+    $("refresh").disabled = false;
+  }
+});
+
+auth.onAuthStateChanged(async user => {
+  ++loadId;
+  clearFeedback();
+  updateAccountUI(user);
+
+  if (!user) {
+    setStatus("Sign in to see your feedback.");
+    return;
+  }
+
+  try {
+    await user.reload();
+
+    if (auth.currentUser?.uid !== user.uid) {
+      return;
+    }
+
+    updateAccountUI(auth.currentUser);
+    await loadFeedback(auth.currentUser);
+
+  } catch (error) {
+    setStatus(
+      "Unable to verify your account. Please try again.",
+      true
+    );
+  }
+});
+</script>
+
+<footer class="site-footer" aria-label="Department information and contacts">
+  <div class="site-footer__brand"><img src="logo.jpg" alt="Faculty of Science, Charles University – Department of Organic Chemistry"><p>Department of Organic Chemistry · Charles University</p></div>
+  <div class="site-footer__grid">
+    <section class="site-footer__item" aria-label="Department address"><h2>Department address</h2><p>Hlavova 2030/8<br>128 00 Praha 2, Czech Republic</p><p><a href="https://orgchem.natur.cuni.cz/" target="_blank" rel="noopener noreferrer">orgchem.natur.cuni.cz</a></p></section>
+    <section class="site-footer__item" aria-label="Seminar contacts"><h2>Seminar organization</h2><p><span class="site-footer__person">Jiří Míšek</span> · Head of PhD seminars<br><a href="mailto:jiri.misek@natur.cuni.cz">jiri.misek@natur.cuni.cz</a></p><p><span class="site-footer__person">Radek Staník</span> · Seminar coordinator<br><a href="mailto:radek.stanik@natur.cuni.cz">radek.stanik@natur.cuni.cz</a></p></section>
+    <section class="site-footer__item" aria-label="Voting support"><h2>Voting system · technical support</h2><p><span class="site-footer__person">Dominik Kunák</span><br><a href="mailto:kunakd@natur.cuni.cz">kunakd@natur.cuni.cz</a></p><p>Registration, verification, sign-in and voting issues.</p></section>
+    <section class="site-footer__item" aria-label="Quick links"><h2>Quick links</h2><p><a href="index.html">Voting</a> · <a href="results.html">Evaluation results</a> · <a href="feedback.html">Presenter feedback</a></p></section>
+  </div><p class="site-footer__copyright">© 2026 Department of Organic Chemistry, Faculty of Science, Charles University</p>
+</footer>
+</body>
+</html>

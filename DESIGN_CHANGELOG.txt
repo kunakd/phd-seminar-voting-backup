@@ -1,0 +1,12 @@
+VISUAL THEME PATCH – 4 November 2026
+
+Modified: index.html, index-2026-2027.html, results.html, results-2026-2027.html, feedback.html.
+Added: department-theme.css.
+
+No changes to authentication, voting, seminar configuration, Firestore, GitHub Actions, test code, or feedback automation.
+
+Deployment: upload the 6 listed files to the public repository root. Do not upload the entire ZIP blindly if you have made later changes on GitHub. Commit, then inspect the deployed site on desktop/mobile. Run existing GitHub Actions tests.
+
+The footer links to https://orgchem.natur.cuni.cz/ and uses clickable mailto addresses for Jiří Míšek, Radek Staník and Dominik Kunák. The organization/technical support distinction is explicit.
+
+IMPORTANT: This package changes visuals only. It does NOT fix or verify Firestore production voting windows or self-voting rules; audit those separately.

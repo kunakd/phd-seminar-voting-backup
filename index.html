@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PhD Seminar Evaluation</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="seminars-2026-2027.js"></script>
+<style>
+body { font-family: Arial, sans-serif; max-width: 800px; margin: 30px auto; padding: 20px; }
+header { display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; }
+header img { height: 120px; margin-bottom: 10px; max-width: 100%; object-fit: contain; }
+header h1 { margin: 0; color: #333; font-size: 28px; text-align: center; }
+label { display: block; margin-top: 15px; font-weight: bold; }
+input, select, textarea, button { width: 100%; padding: 10px; margin-top: 5px; border-radius: 4px; border: 1px solid #ccc; box-sizing: border-box; font: inherit; }
+textarea { resize: vertical; }
+button { font-size: 16px; margin-top: 10px; cursor: pointer; }
+button:disabled { opacity: .6; cursor: not-allowed; }
+.success { color: #176d34; margin-top: 16px; }
+.error { color: #a51e25; margin-top: 16px; }
+.presentation-block { border: 1px solid #ccc; border-radius: 8px; padding: 15px; margin-top: 20px; background: #fafafa; box-shadow: 1px 1px 5px rgba(0,0,0,.05); }
+.presentation-block h3 { margin-top: 0; color: #444; }
+textarea:disabled { background-color: #eee; color: #666; }
+#authSection { border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 25px; }
+footer { background: #fff; text-align: center; padding: 25px 15px; font-size: 14px; color: #000; border-top: 1px solid #ccc; margin-top: 60px; }
+footer a { color: #000; text-decoration: none; overflow-wrap: anywhere; }
+@media (max-width: 600px) { body { margin: 0 auto; padding: 14px; } header img { height: 90px; } header h1 { font-size: 24px; } #authSection { padding: 14px; } }
+</style>
+<link rel="stylesheet" href="department-theme.css">
+</head>
+<body>
+<header>
+  <img src="logo.jpg" alt="Department Logo">
+  <h1>PhD Seminar Evaluation</h1>
+</header>
+<section id="authSection">
+  <h2>Sign in to vote</h2>
+  <p>Please use your verified institutional email address (@natur.cuni.cz or @uochb.cas.cz).</p>
+  <label for="authEmail">Email address</label>
+  <input type="email" id="authEmail" autocomplete="email" placeholder="name@natur.cuni.cz">
+  <label for="authPassword">Password</label>
+  <input type="password" id="authPassword" autocomplete="current-password">
+  <div style="margin-top:15px;">
+    <button type="button" id="signInBtn">Sign in</button>
+    <button type="button" id="registerBtn">Create account</button>
+    <button type="button" id="resetPasswordBtn">Forgot password?</button>
+    <button type="button" id="verifyEmailBtn" style="display:none;">Resend verification email</button>
+    <button type="button" id="checkVerificationBtn" style="display:none;">Check verification</button>
+    <button type="button" id="signOutBtn" style="display:none;">Sign out</button>
+  </div>
+  <p id="authStatus" role="status" aria-live="polite"></p>
+</section>
+<form id="voteForm" style="display:none;">
+  <label for="seminar">Select seminar</label>
+  <select id="seminar" required>
+    <option value="">-- Select seminar --</option>
+    <option value="Seminar 1">Seminar 1 – 13 November 2026</option>
+    <option value="Seminar 2">Seminar 2 – 11 December 2026</option>
+    <option value="Seminar 3">Seminar 3 – 15 January 2027</option>
+    <option value="Seminar 4">Seminar 4 – 12 February 2027</option>
+    <option value="Seminar 6">Seminar 6 – 16 April 2027</option>
+    <option value="Seminar 7">Seminar 7 – 14 May 2027</option>
+  </select>
+  <div id="presentations"></div>
+  <p id="votingWindowStatus" role="status" aria-live="polite"></p>
+  <button type="submit">Submit evaluation</button>
+</form>
+<div id="message" role="status" aria-live="polite"></div>
+<p style="text-align:center"><a href="results.html">Evaluation results</a> · <a href="feedback.html">Presenter feedback</a></p>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyA3oSDoF5LC6pweqVinV2ykpJopQwFWulM",
+  authDomain: "phd-seminar-voting.firebaseapp.com",
+  projectId: "phd-seminar-voting",
+  storageBucket: "phd-seminar-voting.firebasestorage.app",
+  messagingSenderId: "1042633812969",
+  appId: "1:1042633812969:web:7fa70745a53338ec5ab978"
+};
+firebase.initializeApp(firebaseConfig);
+</script>
+<script src="voting-2026-2027.js"></script>
+<script src="auth-2026-2027.js"></script>
+
+<footer class="site-footer" aria-label="Department information and contacts">
+  <div class="site-footer__brand"><img src="logo.jpg" alt="Faculty of Science, Charles University – Department of Organic Chemistry"><p>Department of Organic Chemistry · Charles University</p></div>
+  <div class="site-footer__grid">
+    <section class="site-footer__item" aria-label="Department address"><h2>Department address</h2><p>Hlavova 2030/8<br>128 00 Praha 2, Czech Republic</p><p><a href="https://orgchem.natur.cuni.cz/" target="_blank" rel="noopener noreferrer">orgchem.natur.cuni.cz</a></p></section>
+    <section class="site-footer__item" aria-label="Seminar contacts"><h2>Seminar organization</h2><p><span class="site-footer__person">Jiří Míšek</span> · Head of PhD seminars<br><a href="mailto:jiri.misek@natur.cuni.cz">jiri.misek@natur.cuni.cz</a></p><p><span class="site-footer__person">Radek Staník</span> · Seminar coordinator<br><a href="mailto:radek.stanik@natur.cuni.cz">radek.stanik@natur.cuni.cz</a></p></section>
+    <section class="site-footer__item" aria-label="Voting support"><h2>Voting system · technical support</h2><p><span class="site-footer__person">Dominik Kunák</span><br><a href="mailto:kunakd@natur.cuni.cz">kunakd@natur.cuni.cz</a></p><p>Registration, verification, sign-in and voting issues.</p></section>
+    <section class="site-footer__item" aria-label="Quick links"><h2>Quick links</h2><p><a href="index.html">Voting</a> · <a href="results.html">Evaluation results</a> · <a href="feedback.html">Presenter feedback</a></p></section>
+  </div><p class="site-footer__copyright">© 2026 Department of Organic Chemistry, Faculty of Science, Charles University</p>
+</footer>
+</body>
+</html>

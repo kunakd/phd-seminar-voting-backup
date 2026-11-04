@@ -1,0 +1,321 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PhD Seminar Results 2026/2027</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script src="seminars-2026-2027.js"></script>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+header img {
+  height: 120px;
+  margin-bottom: 10px;
+}
+
+header h1 {
+  margin: 0;
+  color: #333;
+  font-size: 28px;
+  text-align: center;
+}
+
+header p {
+  color: #666;
+  margin-top: 8px;
+}
+
+#seminarSelectContainer {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+#seminarSelect {
+  padding: 8px;
+  margin-top: 8px;
+  max-width: 100%;
+}
+
+.seminar {
+  margin-bottom: 30px;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  display: inline-block;
+  text-align: center;
+  min-width: 300px;
+  max-width: 90vw;
+  box-sizing: border-box;
+}
+
+.seminar h2 {
+  color: #333;
+}
+
+.seminar p {
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+}
+
+.winner {
+  font-weight: bold;
+  color: green;
+  margin-top: 18px !important;
+}
+
+.votes {
+  font-weight: bold;
+  color: darkorange;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.message {
+  color: #666;
+  text-align: center;
+  margin-top: 15px;
+}
+
+.error {
+  color: #b00020;
+}
+</style>
+<link rel="stylesheet" href="department-theme.css">
+</head>
+
+<body>
+
+<header>
+  <img src="logo.jpg" alt="Department Logo">
+  <h1>PhD Seminar Evaluation Results</h1>
+  <p>Academic Year 2026/2027</p>
+</header>
+
+<div id="seminarSelectContainer">
+  <label for="seminarSelect">
+    <strong>Select seminar:</strong>
+  </label>
+
+  <select id="seminarSelect">
+    <option value="">-- choose seminar --</option>
+  </select>
+</div>
+
+<div id="results" aria-live="polite"></div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyA3oSDoF5LC6pweqVinV2ykpJopQwFWulM",
+  authDomain: "phd-seminar-voting.firebaseapp.com",
+  projectId: "phd-seminar-voting",
+  storageBucket: "phd-seminar-voting.firebasestorage.app",
+  messagingSenderId: "1042633812969",
+  appId: "1:1042633812969:web:7fa70745a53338ec5ab978",
+  measurementId: "G-2JQDJWPH7L"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.firestore();
+
+const seminarSelect = document.getElementById("seminarSelect");
+const resultsDiv = document.getElementById("results");
+
+// Seminar information is shared with the voting website.
+const seminars = window.SEMINARS || {};
+
+// Seminars 5 and 8 are not evaluated.
+const evaluatedSeminars = Object.entries(seminars).filter(
+  ([, seminar]) =>
+    Array.isArray(seminar.presenters) &&
+    seminar.presenters.length > 0
+);
+
+// Populate the seminar selector.
+evaluatedSeminars.forEach(([seminarName, seminar]) => {
+  const option = document.createElement("option");
+
+  option.value = seminarName;
+  option.textContent = `${seminarName} – ${seminar.date}`;
+
+  seminarSelect.appendChild(option);
+});
+
+function showMessage(message, isError = false) {
+  resultsDiv.replaceChildren();
+
+  const paragraph = document.createElement("p");
+  paragraph.className = isError ? "message error" : "message";
+  paragraph.textContent = message;
+
+  resultsDiv.appendChild(paragraph);
+}
+
+function formatScore(score) {
+  return Number(score).toFixed(2);
+}
+
+function displayResults(seminarName, data) {
+  resultsDiv.replaceChildren();
+
+  const expectedPresenters = seminars[seminarName]?.presenters;
+
+  if (!Array.isArray(expectedPresenters)) {
+    showMessage("Seminar information is unavailable.", true);
+    return;
+  }
+
+  // Published results must contain aggregate values only.
+  const numberOfVotes = data.numberOfVotes;
+  const presentations = data.presentations;
+
+  if (
+    !Number.isInteger(numberOfVotes) ||
+    numberOfVotes <= 0 ||
+    !Array.isArray(presentations) ||
+    presentations.length !== expectedPresenters.length
+  ) {
+    showMessage("Results are not available yet.");
+    return;
+  }
+
+  const expectedNames = new Set(expectedPresenters);
+
+  const validPresentations = presentations.every(p =>
+    p &&
+    typeof p.name === "string" &&
+    expectedNames.has(p.name) &&
+    typeof p.averageScore === "number" &&
+    Number.isFinite(p.averageScore) &&
+    p.averageScore >= 1 &&
+    p.averageScore <= 10
+  );
+
+  const uniqueNames = new Set(presentations.map(p => p.name));
+
+  if (
+    !validPresentations ||
+    uniqueNames.size !== expectedPresenters.length
+  ) {
+    showMessage("Published results have an invalid format.", true);
+    return;
+  }
+
+  const ranked = [...presentations].sort(
+    (a, b) => b.averageScore - a.averageScore
+  );
+
+  const votesDiv = document.createElement("p");
+  votesDiv.className = "votes";
+  votesDiv.textContent =
+    `${numberOfVotes} participants of the seminar submitted their votes`;
+
+  resultsDiv.appendChild(votesDiv);
+
+  const seminarDiv = document.createElement("div");
+  seminarDiv.className = "seminar";
+
+  const heading = document.createElement("h2");
+  heading.textContent = seminarName;
+  seminarDiv.appendChild(heading);
+
+  ranked.forEach((presentation, index) => {
+    const paragraph = document.createElement("p");
+
+    paragraph.textContent =
+      `${index + 1}. ${presentation.name}: ` +
+      `${formatScore(presentation.averageScore)} points`;
+
+    seminarDiv.appendChild(paragraph);
+  });
+
+  const highestScore = ranked[0].averageScore;
+
+  // Support multiple winners when their averages are equal.
+  const winners = ranked.filter(
+    presentation =>
+      Math.abs(presentation.averageScore - highestScore) < 1e-9
+  );
+
+  const winnerDiv = document.createElement("p");
+  winnerDiv.className = "winner";
+
+  winnerDiv.textContent =
+    `${winners.length === 1 ? "Winner" : "Winners"}: ` +
+    `${winners.map(w => w.name).join(", ")} ` +
+    `with ${formatScore(highestScore)} points`;
+
+  seminarDiv.appendChild(winnerDiv);
+  resultsDiv.appendChild(seminarDiv);
+
+  if (typeof confetti === "function") {
+    confetti({
+      particleCount: 100,
+      spread: 120,
+      origin: { y: 0.6 }
+    });
+  }
+}
+
+let unsubscribeResults = null;
+seminarSelect.addEventListener("change", () => {
+  if (unsubscribeResults) { unsubscribeResults(); unsubscribeResults = null; }
+  const selected = seminarSelect.value;
+  resultsDiv.replaceChildren();
+  if (!selected) return;
+  if (!seminars[selected]) return showMessage("Unknown seminar.", true);
+  showMessage("Loading results...");
+  // Listener receives each new published aggregate automatically.
+  unsubscribeResults = db.collection("public_results_2026_2027").doc(selected)
+    .onSnapshot(snapshot => {
+      if (!snapshot.exists) return showMessage("Results are not available yet (at least 3 votes required).");
+      displayResults(selected, snapshot.data());
+      const status = snapshot.data().status;
+      const note = document.createElement("p");
+      note.className = "message";
+      note.textContent = status === "final" ? "Final results – voting closed" :
+        "Live results – updated periodically during voting";
+      resultsDiv.appendChild(note);
+    }, error => {console.error(error);showMessage("Unable to load results.", true);});
+});
+
+if (evaluatedSeminars.length === 0) {
+  showMessage(
+    "Seminar schedule could not be loaded.",
+    true
+  );
+}
+</script>
+
+<nav style="text-align:center;margin-top:25px"><a href="archive-2025-2026.html">Results archive 2025/2026</a></nav>
+<footer class="site-footer" aria-label="Department information and contacts">
+  <div class="site-footer__brand"><img src="logo.jpg" alt="Faculty of Science, Charles University – Department of Organic Chemistry"><p>Department of Organic Chemistry · Charles University</p></div>
+  <div class="site-footer__grid">
+    <section class="site-footer__item" aria-label="Department address"><h2>Department address</h2><p>Hlavova 2030/8<br>128 00 Praha 2, Czech Republic</p><p><a href="https://orgchem.natur.cuni.cz/" target="_blank" rel="noopener noreferrer">orgchem.natur.cuni.cz</a></p></section>
+    <section class="site-footer__item" aria-label="Seminar contacts"><h2>Seminar organization</h2><p><span class="site-footer__person">Jiří Míšek</span> · Head of PhD seminars<br><a href="mailto:jiri.misek@natur.cuni.cz">jiri.misek@natur.cuni.cz</a></p><p><span class="site-footer__person">Radek Staník</span> · Seminar coordinator<br><a href="mailto:radek.stanik@natur.cuni.cz">radek.stanik@natur.cuni.cz</a></p></section>
+    <section class="site-footer__item" aria-label="Voting support"><h2>Voting system · technical support</h2><p><span class="site-footer__person">Dominik Kunák</span><br><a href="mailto:kunakd@natur.cuni.cz">kunakd@natur.cuni.cz</a></p><p>Registration, verification, sign-in and voting issues.</p></section>
+    <section class="site-footer__item" aria-label="Quick links"><h2>Quick links</h2><p><a href="index.html">Voting</a> · <a href="results.html">Evaluation results</a> · <a href="feedback.html">Presenter feedback</a></p></section>
+  </div><p class="site-footer__copyright">© 2026 Department of Organic Chemistry, Faculty of Science, Charles University</p>
+</footer>
+</body>
+</html>
