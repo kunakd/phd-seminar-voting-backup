@@ -120,3 +120,32 @@ body > header .academic-year {
   .site-footer__grid { gap: 11px!important; margin: 13px 0!important; padding: 13px 0!important; }
   #votingWindowStatus:not(:empty) { padding: 12px 13px!important; }
 }
+
+/* Unified four-card department footer across voting, results and feedback. */
+.site-footer__grid { align-items:stretch; }
+.site-footer__item {
+  min-width:0;
+  border:1px solid #d9ded7;
+  border-radius:9px;
+  background:#fff;
+  padding:18px 19px;
+  text-align:left;
+}
+.site-footer__item h2 { margin:0 0 7px!important; }
+.site-footer__item p { margin:4px 0!important; }
+@media(max-width:620px) {
+  .site-footer__item { padding:16px; }
+}
+
+/* White header card, consistent across Voting, Results and Feedback. */
+body > header {
+  background: #ffffff!important;
+  border: 1px solid var(--line)!important;
+  border-top: 4px solid var(--green)!important;
+  border-radius: 14px!important;
+  box-shadow: var(--shadow)!important;
+  padding: 22px 18px 18px!important;
+}
+@media (max-width: 620px) {
+  body > header { padding: 16px 12px 14px!important; }
+}
