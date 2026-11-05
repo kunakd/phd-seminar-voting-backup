@@ -128,7 +128,7 @@
     if (pending) status.textContent = "Submission pending: waiting for server confirmation. Do not submit again.";
     else if (busy) status.textContent = "Submitting evaluation. Please wait.";
     else if (finished) status.textContent = "Your evaluation was submitted successfully.";
-    else if (state === "unselected") status.textContent = "Select a seminar.";
+    else if (state === "unselected") status.textContent = "";
     else if (state === "upcoming") status.textContent = `Voting opens ${pragueTime(WINDOWS[seminar][0])} (Prague time).`;
     else if (state === "closed") status.textContent = `Voting closed ${pragueTime(WINDOWS[seminar][1])} (Prague time).`;
     else status.textContent = `Voting closes ${pragueTime(WINDOWS[seminar][1])} (Prague time).`;
